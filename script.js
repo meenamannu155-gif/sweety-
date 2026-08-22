@@ -9,7 +9,10 @@ function speak(text) {
     speech.pitch = 1.15;
 
     const voices = window.speechSynthesis.getVoices();
-    const hindiVoice = voices.find(v => v.lang === "hi-IN");
+
+    const hindiVoice =
+        voices.find(v => v.lang === "hi-IN") ||
+        voices.find(v => v.lang.startsWith("hi"));
 
     if (hindiVoice) {
         speech.voice = hindiVoice;
@@ -19,106 +22,115 @@ function speak(text) {
 }
 
 function startSweety() {
+
     const SpeechRecognition =
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-        status.innerText = "❌ इस browser में voice recognition उपलब्ध नहीं है।";
+        status.innerText =
+            "❌ इस browser में voice recognition उपलब्ध नहीं है।";
         speak("माफ कीजिए, इस browser में voice recognition उपलब्ध नहीं है।");
         return;
     }
-reco
 
     const recognition = new SpeechRecognition();
 
     recognition.lang = "hi-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
-recognition.onstart = function() {
-    status.innerText = "🎧 Mic चालू है, अब बोलिए...";
-};
+    recognition.maxAlternatives = 1;
 
-recognition.onspeechstart = function() {
-    status.innerText = "🗣️ आवाज़ मिल रही है...";
-};
     status.innerText = "🎧 Sweety सुन रही है...";
 
-    recognition.onresult = function(event) {
+    recognition.onstart = function () {
+        status.innerText = "🎧 Mic चालू है, अब बोलिए...";
+    };
 
-        const text = event.results[0][0].transcript
+    recognition.onspeechstart = function () {
+        status.innerText = "🗣️ आवाज़ मिल रही है...";
+    };
+
+    recognition.onresult = function (event) {
+
+        const text =
+            event.results[0][0].transcript
             .trim()
             .toLowerCase();
 
         status.innerText = "आपने कहा: " + text;
 
-        // Sweety को बुलाने पर
+        // Sweety
         if (
             text.includes("sweety") ||
             text.includes("स्वीटी") ||
             text.includes("sweetie")
         ) {
-            speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
+            speak("जी ❤️ मैं Sweety हूँ। बताइए क्या करना है?");
             return;
         }
 
-        // YouTube खोलना
+        // YouTube
         if (
             text.includes("youtube") ||
             text.includes("यूट्यूब")
         ) {
             speak("जी, YouTube खोल रही हूँ।");
 
-            setTimeout(function() {
-                window.location.href = "https://www.youtube.com";
+            setTimeout(function () {
+                window.location.href =
+                    "https://www.youtube.com";
             }, 1200);
 
             return;
         }
 
-        // Google खोलना
+        // Google
         if (
             text.includes("google") ||
             text.includes("गूगल")
         ) {
             speak("जी, Google खोल रही हूँ।");
 
-            setTimeout(function() {
-                window.location.href = "https://www.google.com";
+            setTimeout(function () {
+                window.location.href =
+                    "https://www.google.com";
             }, 1200);
 
             return;
         }
 
-        // WhatsApp खोलना
+        // WhatsApp
         if (
             text.includes("whatsapp") ||
             text.includes("व्हाट्सएप")
         ) {
             speak("जी, WhatsApp खोल रही हूँ।");
 
-            setTimeout(function() {
-                window.location.href = "https://web.whatsapp.com";
+            setTimeout(function () {
+                window.location.href =
+                    "https://web.whatsapp.com";
             }, 1200);
 
             return;
         }
 
-        // Instagram खोलना
+        // Instagram
         if (
             text.includes("instagram") ||
             text.includes("इंस्टाग्राम")
         ) {
             speak("जी, Instagram खोल रही हूँ।");
 
-            setTimeout(function() {
-                window.location.href = "https://www.instagram.com";
+            setTimeout(function () {
+                window.location.href =
+                    "https://www.instagram.com";
             }, 1200);
 
             return;
         }
 
-        // समय पूछना
+        // Time
         if (
             text.includes("time") ||
             text.includes("टाइम") ||
@@ -135,7 +147,9 @@ recognition.onspeechstart = function() {
             );
 
             speak("अभी समय है " + time);
-            status.innerText = "⏰ अभी समय है: " + time;
+
+            status.innerText =
+                "⏰ अभी समय है: " + time;
 
             return;
         }
@@ -145,31 +159,48 @@ recognition.onspeechstart = function() {
             text.includes("hello") ||
             text.includes("हेलो") ||
             text.includes("नमस्ते") ||
-            text.includes("hi")
+            text === "hi"
         ) {
-            speak("नमस्ते ❤️ मैं Sweety हूँ। मैं आपकी मदद के लिए तैयार हूँ।");
+            speak(
+                "नमस्ते ❤️ मैं Sweety हूँ। मैं आपकी मदद के लिए तैयार हूँ।"
+            );
             return;
         }
 
-        // Command समझ में न आए
-        speak("माफ कीजिए, मैं यह command अभी नहीं समझ पाई।");
-        status.innerText = "🤔 Command समझ नहीं आई";
+        speak(
+            "माफ कीजिए, मैं यह command अभी नहीं समझ पाई।"
+        );
+
+        status.innerText =
+            "🤔 Command समझ नहीं आई";
     };
 
-    recognition.onerror = function(event) {
+    recognition.onerror = function (event) {
+
         console.log("Voice error:", event.error);
 
-        status.innerText = "❌ फिर से कोशिश करें ❤️";
+        status.innerText =
+            "❌ Voice error: " + event.error;
 
         if (event.error === "not-allowed") {
-            speak("कृपया microphone की permission दें।");
+            speak(
+                "कृपया microphone की permission दें।"
+            );
+        }
+
+        if (event.error === "no-speech") {
+            status.innerText =
+                "🎤 कोई आवाज़ नहीं मिली, फिर से बोलिए।";
         }
     };
 
-    recognition.onend = function() {
+    recognition.onend = function () {
         console.log("Voice recognition बंद हुआ");
-    }
+    };
 
-recognition.start();
-    
+    try {
+        recognition.start();
+    } catch (error) {
+        console.log(error);
+    }
 }
