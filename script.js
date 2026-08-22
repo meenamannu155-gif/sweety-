@@ -84,22 +84,44 @@ function startSweety() {
 
             return;
         }
-// Song
+
+        // Song
 if (
-    text.includes("गाना") ||
-    text.includes("गाने") ||
-    text.includes("song") ||
-    text.includes("music")
+  text.includes("गाना") ||
+  text.includes("गाने") ||
+  text.includes("song") ||
+  text.includes("music")
 ) {
-    speak("जी, गाना चला रही हूँ");
+  let query = text
+    .replace("गाना चलाओ", "")
+    .replace("गाना चला दो", "")
+    .replace("गाना चलाना", "")
+    .replace("गाने चलाओ", "")
+    .replace("song चलाओ", "")
+    .replace("song chalao", "")
+    .replace("music चलाओ", "")
+    .replace("music chalao", "")
+    .replace("गाना", "")
+    .replace("song", "")
+    .replace("music", "")
+    .trim();
 
-    setTimeout(function () {
-        window.location.href =
-            "https://www.youtube.com/results?search_query=music";
-    }, 1200);
+  if (!query) {
+    query = "music";
+  }
 
-    return;
+  speak("जी, " + query + " का गाना खोज रही हूँ");
+
+  setTimeout(function () {
+    window.location.href =
+      "https://www.youtube.com/results?search_query=" +
+      encodeURIComponent(query);
+  }, 1200);
+
+  return;
 }
+
+
         // Google Search
 if (
   text.includes("google") ||
