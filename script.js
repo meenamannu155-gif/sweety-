@@ -5,8 +5,15 @@ function speak(text) {
 
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = "hi-IN";
-    speech.rate = 0.95;
+    speech.rate = 0.9;
     speech.pitch = 1.15;
+
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find(v => v.lang === "hi-IN");
+
+    if (hindiVoice) {
+        speech.voice = hindiVoice;
+    }
 
     window.speechSynthesis.speak(speech);
 }
