@@ -51,66 +51,7 @@
 
   <div id="status">Sweety तैयार है ❤️</div>
 
-  <script>
-    const status = document.getElementById("status");
-
-    function speak(text) {
-      const speech = new SpeechSynthesisUtterance(text);
-      speech.lang = "hi-IN";
-      speech.rate = 0.95;
-      speech.pitch = 1.15;
-
-      const voices = speechSynthesis.getVoices();
-      const femaleVoice = voices.find(v =>
-        /female|woman|zira|samantha|google hindi/i.test(v.name)
-      );
-
-      if (femaleVoice) speech.voice = femaleVoice;
-
-      speechSynthesis.cancel();
-      speechSynthesis.speak(speech);
-    }
-
-    function startSweety() {
-      const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
-
-      if (!SpeechRecognition) {
-        status.innerText = "इस browser में voice recognition उपलब्ध नहीं है।";
-        speak("माफ कीजिए, इस browser में voice recognition उपलब्ध नहीं है।");
-        return;
-      }
-
-      const recognition = new SpeechRecognition();
-      recognition.lang = "hi-IN";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      status.innerText = "🎧 Sweety सुन रही है...";
-
-      recognition.start();
-
-      recognition.onresult = function(event) {
-        const text = event.results[0][0].transcript.toLowerCase();
-
-        status.innerText = "आपने कहा: " + text;
-
-        if (text.includes("sweety")) {
-    speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
-} else {
-    status.innerText = "मैं सुन रही हूँ...";
-        }
-
-      recognition.onerror = function() {
-        status.innerText = "फिर से कोशिश करें ❤️";
-      };
-
-      recognition.onend = function() {
-        status.innerText = "Sweety तैयार है ❤️";
-      };
-    }
-  </script>
+><s<script src="script.js"></script>
 
 </body>
 </html>
