@@ -28,13 +28,20 @@ function startSweety() {
         speak("माफ कीजिए, इस browser में voice recognition उपलब्ध नहीं है।");
         return;
     }
+reco
 
     const recognition = new SpeechRecognition();
 
     recognition.lang = "hi-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
+recognition.onstart = function() {
+    status.innerText = "🎧 Mic चालू है, अब बोलिए...";
+};
 
+recognition.onspeechstart = function() {
+    status.innerText = "🗣️ आवाज़ मिल रही है...";
+};
     status.innerText = "🎧 Sweety सुन रही है...";
 
     recognition.onresult = function(event) {
@@ -161,7 +168,8 @@ function startSweety() {
 
     recognition.onend = function() {
         console.log("Voice recognition बंद हुआ");
-    };
+    }
 
+recognition.start();
     
 }
