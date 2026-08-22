@@ -156,9 +156,5 @@ function startSweety() {
         console.log("Voice recognition बंद हुआ");
     };
 
-    try {
-        recognition.start();
-    } catch (error) {
-        console.log(error);
-    }
+    
 }
