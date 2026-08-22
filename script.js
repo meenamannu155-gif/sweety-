@@ -1,142 +1,294 @@
 const button = document.getElementById("talkButton");
 const status = document.getElementById("status");
 
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-
 let recognition = null;
 let isListening = false;
 let isSpeaking = false;
-let lastText = "";
-let lastTime = 0;
 
-if (!SpeechRecognition) {
-  status.innerText = "❌ इस browser में voice recognition support नहीं है।";
-} else {
-  recognition = new SpeechRecognition();
+function speak(text) {
+  if (!("speechSynthesis" in window)) {
+    status.innerText = "❌ इस browser में आवाज उपलब्ध नहीं है।";
+    return;
+  }
 
-  recognition.lang = "hi-IN";
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  speechSynthesis.cancel();
+
+  const speech = new SpeechSynthesisUtterance(text);
+
+  speech.lang = "hi-IN";
+  speech.rate = 0.95;
+  speech.pitch = 1.15;
+  speech.volume = 1;
+
+  const voices = speechSynthesis.getVoices();
+
+  const femaleVoice = voices.find(voice =>
+    /female|woman|zira|samantha|google hindi|hindi/i.test(
+      voice.name + " " + voice.lang
+    )
+  );
+
+  if (femaleVoice) {
+    speech.voice = femaleVoice;
+  }
+
+  speech.onstart = function () {
+    isSpeaking = true;
+  };
+
+  speech.onend = function () {
+    isSpeaking = false;
+  };
+
+  speech.onerror = function () {
+    isSpeaking = false;
+  };
+
+  speechSynthesis.speak(speech);
+}
+
+function createRecognition() {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    status.innerText =
+      "❌ इस browser में voice recognition उपलब्ध नहीं है।";
+
+    speak(
+      "माफ कीजिए, इस browser में voice recognition उपलब्ध नहीं है।"
+    );
+
+    return null;
+  }
+
+  const rec = new SpeechRecognition();
+
+  rec.lang = "hi-IN";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  return rec;
+}
+
+function startSweety() {
+  if (isListening) {
+    return;
+  }
+
+  if (isSpeaking) {
+    speechSynthesis.cancel();
+    isSpeaking = false;
+  }
+
+  recognition = createRecognition();
+
+  if (!recognition) {
+    return;
+  }
+
+  isListening = true;
+
+  status.innerText = "🎧 Sweety सुन रही है...";
+
+  try {
+    recognition.start();
+  } catch (error) {
+    isListening = false;
+    status.innerText = "❌ फिर से कोशिश करें ❤️";
+  }
 
   recognition.onstart = function () {
     isListening = true;
     status.innerText = "🎧 Sweety सुन रही है...";
   };
 
-  recognition.onend = function () {
-    isListening = false;
+  recognition.onresult = function (event) {
+    const result =
+      event.results[0][0].transcript;
+
+    const text = result
+      .toLowerCase()
+      .trim();
+
+    status.innerText =
+      "आपने कहा: " + result;
+
+    handleCommand(text);
   };
 
   recognition.onerror = function (event) {
     isListening = false;
-    console.log("Speech error:", event.error);
-    status.innerText = "❌ Mic में problem हुई, फिर से दबाएँ ❤️";
-  };
 
-  recognition.onresult = function (event) {
-    const text = event.results[0][0].transcript
-      .trim()
-      .toLowerCase();
+    console.log(
+      "Voice recognition error:",
+      event.error
+    );
 
-    console.log("आपने कहा:", text);
-
-    const now = Date.now();
-
-    // एक ही आवाज को बार-बार process होने से रोकना
-    if (text === lastText && now - lastTime < 3000) {
+    if (event.error === "not-allowed") {
+      status.innerText =
+        "❌ Microphone permission दें।";
       return;
     }
 
-    lastText = text;
-    lastTime = now;
-
-    status.innerText = "आपने कहा: " + text;
-
-    // Sweety नाम सुनने पर जवाब
-    if (
-      text.includes("sweety") ||
-      text.includes("स्वीटी") ||
-      text.includes("sweetie")
-    ) {
-      speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
-    } else {
-      speak("जी, मैंने सुना। आप Sweety बोलकर फिर से कहिए।");
+    if (event.error === "no-speech") {
+      status.innerText =
+        "🎤 आवाज नहीं सुनी गई। फिर से दबाएँ।";
+      return;
     }
+
+    status.innerText =
+      "❌ फिर से कोशिश करें ❤️";
+  };
+
+  recognition.onend = function () {
+    isListening = false;
   };
 }
 
-function speak(text) {
-  if (isSpeaking) {
+function handleCommand(text) {
+
+  if (!text) {
+    status.innerText =
+      "🎤 कुछ बोलिए...";
     return;
   }
 
-  if (!("speechSynthesis" in window)) {
-    status.innerText = "❌ आपके browser में आवाज़ की सुविधा नहीं है।";
+  if (
+    text.includes("sweety") ||
+    text.includes("स्वीटी")
+  ) {
+    speak(
+      "जी, मैं Sweety हूँ। बताइए क्या करना है?"
+    );
+
     return;
   }
 
-  isSpeaking = true;
+  if (
+    text.includes("hello") ||
+    text.includes("हेलो") ||
+    text.includes("नमस्ते") ||
+    text.includes("नमस्कार")
+  ) {
+    speak(
+      "नमस्ते ❤️ मैं Sweety हूँ। आप कैसे हैं?"
+    );
 
-  window.speechSynthesis.cancel();
-
-  const voiceText = new SpeechSynthesisUtterance(text);
-
-  voiceText.lang = "hi-IN";
-  voiceText.rate = 0.95;
-  voiceText.pitch = 1.15;
-  voiceText.volume = 1;
-
-  const voices = window.speechSynthesis.getVoices();
-
-  const hindiVoice = voices.find(function (voice) {
-    return voice.lang.toLowerCase().startsWith("hi");
-  });
-
-  if (hindiVoice) {
-    voiceText.voice = hindiVoice;
+    return;
   }
 
-  voiceText.onend = function () {
-    isSpeaking = false;
-    status.innerText = "Sweety तैयार है ❤️";
-  };
+  if (
+    text.includes("कैसी हो") ||
+    text.includes("कैसे हो") ||
+    text.includes("how are you")
+  ) {
+    speak(
+      "मैं बिल्कुल ठीक हूँ ❤️ आप बताइए कैसे हैं?"
+    );
 
-  voiceText.onerror = function () {
-    isSpeaking = false;
-    status.innerText = "Sweety तैयार है ❤️";
-  };
+    return;
+  }
 
-  window.speechSynthesis.speak(voiceText);
+  if (
+    text.includes("नाम क्या है") ||
+    text.includes("तुम्हारा नाम") ||
+    text.includes("your name")
+  ) {
+    speak(
+      "मेरा नाम Sweety है ❤️"
+    );
+
+    return;
+  }
+
+  if (
+    text.includes("धन्यवाद") ||
+    text.includes("thank you") ||
+    text.includes("thanks")
+  ) {
+    speak(
+      "आपका स्वागत है ❤️"
+    );
+
+    return;
+  }
+
+  if (
+    text.includes("समय") ||
+    text.includes("time")
+  ) {
+    const now = new Date();
+
+    const time = now.toLocaleTimeString(
+      "hi-IN",
+      {
+        hour: "numeric",
+        minute: "2-digit"
+      }
+    );
+
+    speak(
+      "अभी समय " + time + " है।"
+    );
+
+    return;
+  }
+
+  if (
+    text.includes("बंद हो जाओ") ||
+    text.includes("चुप हो जाओ") ||
+    text.includes("stop")
+  ) {
+    speechSynthesis.cancel();
+
+    status.innerText =
+      "Sweety शांत है ❤️";
+
+    return;
+  }
+
+  speak(
+    "जी, मैंने आपकी बात सुनी। अभी मैं इस command को समझ नहीं पाई।"
+  );
 }
 
-// Button दबाने पर microphone शुरू
 if (button) {
-  button.addEventListener("click", function () {
-    if (!recognition) {
-      status.innerText = "❌ Voice recognition उपलब्ध नहीं है।";
-      return;
-    }
-
-    if (isListening) {
-      recognition.stop();
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    isSpeaking = false;
-
-    try {
-      recognition.start();
-    } catch (error) {
-      console.log(error);
-    }
-  });
+  button.addEventListener(
+    "click",
+    startSweety
+  );
+} else {
+  console.error(
+    "talkButton नहीं मिला।"
+  );
 }
 
-// Browser की voices load होने दें
-window.speechSynthesis.onvoiceschanged = function () {
-  window.speechSynthesis.getVoices();
-};
+if (status) {
+  status.innerText =
+    "Sweety तैयार है ❤️";
+}
 
-status.innerText = "Sweety तैयार है ❤️";
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged =
+    function () {
+      speechSynthesis.getVoices();
+    };
+}
+
+window.addEventListener(
+  "beforeunload",
+  function () {
+    if (recognition) {
+      try {
+        recognition.stop();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    speechSynthesis.cancel();
+  }
+);
