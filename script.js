@@ -85,21 +85,47 @@ function startSweety() {
             return;
         }
 
-        // Google
-        if (
-            text.includes("google") ||
-            text.includes("गूगल")
-        ) {
-            speak("जी, Google खोल रही हूँ।");
+        // Google Search
+if (
+  text.includes("google") ||
+  text.includes("गूगल") ||
+  text.includes("सर्च") ||
+  text.includes("search") ||
+  text.includes("खोजो") ||
+  text.includes("खोज") ||
+  text.includes("ढूँढो")
+) {
+  let query = text
+    .replace("google पर", "")
+    .replace("google में", "")
+    .replace("google", "")
+    .replace("गूगल पर", "")
+    .replace("गूगल में", "")
+    .replace("गूगल", "")
+    .replace("search करो", "")
+    .replace("search कर", "")
+    .replace("सर्च करो", "")
+    .replace("सर्च कर", "")
+    .replace("खोजो", "")
+    .replace("खोज", "")
+    .replace("ढूँढो", "")
+    .trim();
 
-            setTimeout(function () {
-                window.location.href =
-                    "https://www.google.com";
-            }, 1200);
+  if (!query) {
+    speak("जी, Google पर क्या search करना है?");
+    return;
+  }
 
-            return;
-        }
+  speak("जी, Google पर " + query + " search कर रही हूँ");
 
+  setTimeout(function () {
+    window.location.href =
+      "https://www.google.com/search?q=" +
+      encodeURIComponent(query);
+  }, 1200);
+
+  return;
+}
         // WhatsApp
         if (
             text.includes("whatsapp") ||
