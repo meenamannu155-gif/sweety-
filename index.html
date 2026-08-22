@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sweety AI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #bbb;
+      font-size: 18px;
+    }
+
+    button {
+      margin-top: 30px;
+      padding: 18px 35px;
+      border: none;
+      border-radius: 50px;
+      font-size: 20px;
+      background: #ff4fa3;
+      color: white;
+    }
+
+    #status {
+      margin-top: 25px;
+      font-size: 18px;
+      color: #7fffd4;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>💗 Sweety AI</h1>
+  <p>मुझसे बात करने के लिए नीचे बटन दबाओ</p>
+
+  <button onclick="startSweety()">🎙️ Sweety को सुनाओ</button>
+
+  <div id="status">Sweety तैयार है ❤️</div>
+
+  <script>
+    const status = document.getElementById("status");
+
+    function speak(text) {
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = "hi-IN";
+      speech.rate = 0.95;
+      speech.pitch = 1.15;
+
+      const voices = speechSynthesis.getVoices();
+      const femaleVoice = voices.find(v =>
+        /female|woman|zira|samantha|google hindi/i.test(v.name)
+      );
+
+      if (femaleVoice) speech.voice = femaleVoice;
+
+      speechSynthesis.cancel();
+      speechSynthesis.speak(speech);
+    }
+
+    function startSweety() {
+      const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        status.innerText = "इस browser में voice recognition उपलब्ध नहीं है।";
+        speak("माफ कीजिए, इस browser में voice recognition उपलब्ध नहीं है।");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "hi-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      status.innerText = "🎧 Sweety सुन रही है...";
+
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript.toLowerCase();
+
+        status.innerText = "आपने कहा: " + text;
+
+        if (text.includes("sweety")) {
+          speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
+        } else {
+          speak("जी, मैंने सुना। आप Sweety बोलकर फिर से कहिए।");
+        }
+      };
+
+      recognition.onerror = function() {
+        status.innerText = "फिर से कोशिश करें ❤️";
+      };
+
+      recognition.onend = function() {
+        status.innerText = "Sweety तैयार है ❤️";
+      };
+    }
+  </script>
+
+</body>
+</html>
