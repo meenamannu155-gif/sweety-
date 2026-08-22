@@ -1,45 +1,49 @@
 const button = document.getElementById("talkButton");
+const status = document.getElementById("status");
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const recognition = SpeechRecognition
-  ? new SpeechRecognition()
-  : null;
-
-let isSpeaking = false;
+let recognition = null;
 let isListening = false;
+let isSpeaking = false;
 let lastText = "";
 let lastTime = 0;
 
-if (recognition) {
+if (!SpeechRecognition) {
+  status.innerText = "❌ इस browser में voice recognition support नहीं है।";
+} else {
+  recognition = new SpeechRecognition();
+
   recognition.lang = "hi-IN";
   recognition.continuous = false;
   recognition.interimResults = false;
 
-  recognition.onstart = () => {
+  recognition.onstart = function () {
     isListening = true;
+    status.innerText = "🎧 Sweety सुन रही है...";
   };
 
-  recognition.onend = () => {
+  recognition.onend = function () {
     isListening = false;
   };
 
-  recognition.onerror = (event) => {
+  recognition.onerror = function (event) {
     isListening = false;
-    console.log("Speech recognition error:", event.error);
+    console.log("Speech error:", event.error);
+    status.innerText = "❌ Mic में problem हुई, फिर से दबाएँ ❤️";
   };
 
-  recognition.onresult = (event) => {
+  recognition.onresult = function (event) {
     const text = event.results[0][0].transcript
       .trim()
       .toLowerCase();
 
     console.log("आपने कहा:", text);
 
-    // एक ही आवाज़/लाइन को तुरंत दोबारा process नहीं करेगा
     const now = Date.now();
 
+    // एक ही आवाज को बार-बार process होने से रोकना
     if (text === lastText && now - lastTime < 3000) {
       return;
     }
@@ -47,150 +51,92 @@ if (recognition) {
     lastText = text;
     lastTime = now;
 
-    handleCommand(text);
+    status.innerText = "आपने कहा: " + text;
+
+    // Sweety नाम सुनने पर जवाब
+    if (
+      text.includes("sweety") ||
+      text.includes("स्वीटी") ||
+      text.includes("sweetie")
+    ) {
+      speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
+    } else {
+      speak("जी, मैंने सुना। आप Sweety बोलकर फिर से कहिए।");
+    }
   };
 }
 
-
-// ===============================
-// SWEETY की आवाज़
-// ===============================
-
 function speak(text) {
-
-  // अगर Sweety पहले से बोल रही है तो नई speech शुरू नहीं होगी
   if (isSpeaking) {
     return;
   }
 
-  // पहले से चल रही speech पूरी तरह बंद
-  window.speechSynthesis.cancel();
-
-  const voice = new SpeechSynthesisUtterance(text);
-
-  voice.lang = "hi-IN";
-  voice.rate = 0.95;
-  voice.pitch = 1.05;
-  voice.volume = 1;
+  if (!("speechSynthesis" in window)) {
+    status.innerText = "❌ आपके browser में आवाज़ की सुविधा नहीं है।";
+    return;
+  }
 
   isSpeaking = true;
 
-  voice.onend = () => {
+  window.speechSynthesis.cancel();
+
+  const voiceText = new SpeechSynthesisUtterance(text);
+
+  voiceText.lang = "hi-IN";
+  voiceText.rate = 0.95;
+  voiceText.pitch = 1.15;
+  voiceText.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+
+  const hindiVoice = voices.find(function (voice) {
+    return voice.lang.toLowerCase().startsWith("hi");
+  });
+
+  if (hindiVoice) {
+    voiceText.voice = hindiVoice;
+  }
+
+  voiceText.onend = function () {
     isSpeaking = false;
+    status.innerText = "Sweety तैयार है ❤️";
   };
 
-  voice.onerror = () => {
+  voiceText.onerror = function () {
     isSpeaking = false;
+    status.innerText = "Sweety तैयार है ❤️";
   };
 
-  window.speechSynthesis.speak(voice);
+  window.speechSynthesis.speak(voiceText);
 }
 
-
-// ===============================
-// USER COMMAND
-// ===============================
-
-function handleCommand(text) {
-
-  // Sweety नाम बोलने पर
-  if (
-    text.includes("sweety") ||
-    text.includes("स्वीटी")
-  ) {
-    speak("जी, मैं स्वीटी हूँ। बताइए, मैं आपकी क्या मदद करूँ?");
-    return;
-  }
-
-
-  // अगर user पूछे "आप कौन हो"
-  if (
-    text.includes("तुम कौन हो") ||
-    text.includes("आप कौन हो") ||
-    text.includes("कौन हो")
-  ) {
-    speak("मैं स्वीटी हूँ। आप मुझसे बात कर सकते हैं।");
-    return;
-  }
-
-
-  // अगर user बोले "हैलो"
-  if (
-    text.includes("हैलो") ||
-    text.includes("hello") ||
-    text.includes("hi")
-  ) {
-    speak("हैलो जी ❤️ मैं स्वीटी हूँ।");
-    return;
-  }
-
-
-  // अगर user बोले "कैसी हो"
-  if (
-    text.includes("कैसी हो") ||
-    text.includes("कैसे हो")
-  ) {
-    speak("मैं बिल्कुल ठीक हूँ। आप बताइए?");
-    return;
-  }
-
-
-  // अगर command समझ नहीं आई
-  speak("जी, मैंने आपकी बात सुनी।");
-}
-
-
-// ===============================
-// BUTTON
-// ===============================
-
+// Button दबाने पर microphone शुरू
 if (button) {
-
-  button.addEventListener("click", () => {
-
-    // Sweety बोल रही हो तो पहले उसे बंद करें
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      isSpeaking = false;
-      return;
-    }
-
-    // अगर recognition उपलब्ध नहीं है
+  button.addEventListener("click", function () {
     if (!recognition) {
-      speak("माफ कीजिए, आपके browser में speech recognition उपलब्ध नहीं है।");
+      status.innerText = "❌ Voice recognition उपलब्ध नहीं है।";
       return;
     }
 
-    // पहले से listening है तो दोबारा start नहीं करें
     if (isListening) {
+      recognition.stop();
       return;
     }
 
-    // पुरानी speech को cancel करें
     window.speechSynthesis.cancel();
+    isSpeaking = false;
 
     try {
       recognition.start();
     } catch (error) {
-      console.log("Recognition start error:", error);
+      console.log(error);
     }
   });
-
 }
 
+// Browser की voices load होने दें
+window.speechSynthesis.onvoiceschanged = function () {
+  window.speechSynthesis.getVoices();
+};
 
-// ===============================
-// PAGE LOAD
-// ===============================
-
-window.addEventListener("load", () => {
-
-  // Browser की पुरानी speech बंद
-  window.speechSynthesis.cancel();
-
-  isSpeaking = false;
-  isListening = false;
-  lastText = "";
-  lastTime = 0;
-
-});
+status.innerText = "Sweety तैयार है ❤️";
