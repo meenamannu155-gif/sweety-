@@ -3,9 +3,8 @@ const button = document.getElementById("talkButton");
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const recognition = SpeechRecognition
-  ? new SpeechRecognition()
-  : null;
+let recognition = SpeechRecognition ? new SpeechRecognition() : null;
+let isSpeaking = false;
 
 if (recognition) {
   recognition.lang = "hi-IN";
@@ -13,7 +12,16 @@ if (recognition) {
   recognition.interimResults = false;
 }
 
-function speak(text, callback) {
+function speak(text) {
+  if (isSpeaking) return;
+
+  isSpeaking = true;
+
+  // Mic बंद रखो जब Sweety बोल रही हो
+  try {
+    if (recognition) recognition.stop();
+  } catch (e) {}
+
   const voice = new SpeechSynthesisUtterance(text);
 
   voice.lang = "hi-IN";
@@ -30,13 +38,11 @@ function speak(text, callback) {
     voice.voice = femaleVoice;
   }
 
-  speechSynthesis.cancel();
-
-  // Sweety की आवाज खत्म होने के बाद ही mic चालू होगा
   voice.onend = () => {
-    if (callback) callback();
+    isSpeaking = false;
   };
 
+  speechSynthesis.cancel();
   speechSynthesis.speak(voice);
 }
 
@@ -44,43 +50,40 @@ if (button && recognition) {
 
   button.addEventListener("click", () => {
 
-    // पहले Sweety बोलेगी
-    speak("हाँ, मैं Sweety हूँ। बोलिए ❤️", () => {
+    // अगर Sweety बोल रही है तो दोबारा mic शुरू मत करो
+    if (isSpeaking) return;
 
-      // आवाज पूरी खत्म होने के बाद ही सुनना शुरू
-      setTimeout(() => {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.log("Recognition already started");
-        }
-      }, 300);
+    speechSynthesis.cancel();
 
-    });
-
+    try {
+      recognition.start();
+    } catch (e) {
+      console.log("Already listening");
+    }
   });
 
   recognition.onresult = (event) => {
 
     const text =
-      event.results[0][0].transcript.toLowerCase().trim();
+      event.results[0][0].transcript
+        .toLowerCase()
+        .trim();
 
     console.log("आपने कहा:", text);
 
-    // अगर user ने Sweety कहा
+    // Sweety नाम सुना
     if (
       text.includes("sweety") ||
       text.includes("स्वीटी") ||
-      text.includes("स्वीटी")
+      text.includes("स्विटी")
     ) {
 
       speak("जी, मैं सुन रही हूँ। बताइए ❤️");
 
     } else {
 
-      // सिर्फ एक बार जवाब
-      speak("आपने कहा: " + text);
-
+      // अब आपकी बात को दोबारा बोलकर loop नहीं बनाएगी
+      speak("जी, बताइए। ❤️");
     }
   };
 
@@ -88,10 +91,14 @@ if (button && recognition) {
 
     console.log("Speech error:", event.error);
 
-    // no-speech पर कोई आवाज नहीं ताकि loop न बने
-    if (event.error !== "no-speech") {
-      speak("मुझे आपकी आवाज़ साफ़ सुनाई नहीं दी।");
+    // no-speech पर कोई जवाब नहीं
+    if (
+      event.error === "no-speech" ||
+      event.error === "aborted"
+    ) {
+      return;
     }
-  };
 
+    speak("मुझे आपकी आवाज़ साफ़ सुनाई नहीं दी।");
+  };
 }
