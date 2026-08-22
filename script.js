@@ -84,7 +84,22 @@ function startSweety() {
 
             return;
         }
+// Song
+if (
+    text.includes("गाना") ||
+    text.includes("गाने") ||
+    text.includes("song") ||
+    text.includes("music")
+) {
+    speak("जी, गाना चला रही हूँ");
 
+    setTimeout(function () {
+        window.location.href =
+            "https://www.youtube.com/results?search_query=music";
+    }, 1200);
+
+    return;
+}
         // Google Search
 if (
   text.includes("google") ||
