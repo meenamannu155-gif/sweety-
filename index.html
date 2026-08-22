@@ -97,11 +97,10 @@
         status.innerText = "आपने कहा: " + text;
 
         if (text.includes("sweety")) {
-          speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
-        } else {
-          speak("जी, मैंने सुना। आप Sweety बोलकर फिर से कहिए।");
+    speak("जी, मैं Sweety हूँ। बताइए क्या करना है?");
+} else {
+    status.innerText = "मैं सुन रही हूँ...";
         }
-      };
 
       recognition.onerror = function() {
         status.innerText = "फिर से कोशिश करें ❤️";
