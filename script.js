@@ -37,7 +37,7 @@ function startSweety() {
     const recognition = new SpeechRecognition();
 
     recognition.lang = "hi-IN";
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
