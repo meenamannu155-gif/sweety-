@@ -123,7 +123,7 @@ setTimeout(function () {
 }, 1200);
 
 return;
-
+}
         // Google Search
 if (
   text.includes("google") ||
