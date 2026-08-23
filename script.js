@@ -112,11 +112,39 @@ if (
 
   speak("जी, " + query + " का गाना खोज रही हूँ");
 
-  setTimeout(function () {
-    window.location.href =
-      "https://www.youtube.com/results?search_query=" +
-      encodeURIComponent(query);
-  }, 1200);
+  setTimeout(async function () {
+    try {
+        const api =
+            "https://pipedapi.kavin.rocks/search?q=" +
+            encodeURIComponent(query) +
+            "&filter=videos";
+
+        const response = await fetch(api);
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+            const video = data.items[0];
+
+            if (video.url) {
+                const videoId = video.url.split("v=")[1];
+
+                speak("जी, " + video.title + " चला रही हूँ");
+
+                window.location.href =
+                    "https://www.youtube.com/watch?v=" +
+                    videoId +
+                    "&autoplay=1";
+
+                return;
+            }
+        }
+
+        speak("माफ कीजिए, यह गाना नहीं मिला।");
+    } catch (error) {
+        console.log("Song error:", error);
+        speak("माफ कीजिए, गाना खोलने में समस्या आ गई।");
+    }
+}, 1200);
 
   return;
 }
